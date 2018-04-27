@@ -1,4 +1,8 @@
 UCI_DATASET = "https://archive.ics.uci.edu/ml/machine-learning-databases/eeg-mld/"
+# The small data set (smni97_eeg_data.tar.gz) contains data for the 2 subjects, 
+# alcoholic a_co2a0000364 and control c_co2c0000337
+# 364 is the alcoholic
+# 337 is the control
 SMALL_DATASET_FILENAME = "smni_eeg_data"
 LARGE_DATASET_TRAINING_FILENAME = "SMNI_CMI_TRAIN"
 LARGE_DATASET_TESTING_FILENAME = "SMNI_CMI_TEST"
@@ -8,32 +12,71 @@ tar_ext = "tar"
 
 import tarfile
 import urllib2
-import os.path
+import os
+import gzip
 
-def untar_file(filename):
-	if (fname.endswith("tar.gz")):
+def untar_file(filename, root):
+	dir_name = filename.split(".")[0]
+	print(dir_name)
+	if (filename.endswith("tar.gz")):
 		tar = tarfile.open(filename, "r:gz")
-		tar.extractall()
+		tar.extractall(root)
+		print("... untarred @ " + dir_name)
 		tar.close()
+		return dir_name
+	return "!!!"
+
+def untar_directory(root, dir_files):
+	for file in dir_files:
+		untar_file(root + "/" + file, root)
+
 
 # downloads the the source fle to the destination (current dir)
 def download_file(input_filename, output_filename, extension):
 	file = urllib2.urlopen(UCI_DATASET + input_filename + "." + extension)
 	with open(output_filename + "." + extension, "wb") as write_file:
 		write_file.write(file.read())
-	print("... downloaded and wrote to " + output_filename + "." + extension)
+	print("... downloaded @ " + output_filename + "." + extension)
 	return output_filename + "." + extension
 
 if __name__ == "__main__":
 	# main defines 
-	output_filename = SMALL_DATASET_FILENAME
+	input_filename = SMALL_DATASET_FILENAME
+	output_filename = "small_dataset"
 	extension = tar_gz_ext
-
 	full_output_filename = output_filename + "." + extension
+	output_dir = "test_data"
+
+	# download and ETL
+	user_input = "_"
 	if os.path.exists(full_output_filename):
-		user_input = raw_input('''the dataset is already downloaded to the current directory
-							   \nwould you like to redownload? (y or n)''')
-		if user_input == "y":
-			downloaded_filename = download_file(SMALL_DATASET_FILENAME, "small_dataset", tar_gz_ext)
-			
+		user_input = raw_input("would you like to redownload the dataset? (y or n) : ")
+	if user_input == "y" or not os.path.exists(full_output_filename):
+		downloaded_data_file = download_file(input_filename, "small_dataset", tar_gz_ext)
+		untarred_data_dir = untar_file(downloaded_data_file, "")
+
+		for root, dirs, files in os.walk(input_filename):
+			for subject_filename in files:
+				print(subject_filename)
+				untar_file(root + "/" + subject_filename, root)
+		print("\ncombining and un-gzipping patient EEG files...")
+		for root, dirs, files in os.walk(input_filename):
+			for eeg_dir in dirs:
+				for inner_root, inner_dirs, inner_files in os.walk(input_filename + "/" + eeg_dir):
+					# print(str(inner_files))
+					for eeg_data_file in inner_files:
+						f = gzip.open(input_filename + "/" + eeg_dir + "/" + eeg_data_file, 'rb')
+						file_content = f.read()
+						# print(type(file_content))
+						text_file = open(output_dir + "/" + eeg_data_file.split(".")[0] + ".txt", "w")
+						text_file.write(file_content)
+						text_file.close()
+						f.close()
+						print(".. combined file @ " + output_dir + "/" + eeg_data_file.split(".")[0] + ".txt")
+
+
+
+
+
+
 
