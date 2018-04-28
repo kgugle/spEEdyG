@@ -1,3 +1,5 @@
+NUM_CHANNELS = 64
+FREQUENCY_RATE = 256
 UCI_DATASET = "https://archive.ics.uci.edu/ml/machine-learning-databases/eeg-mld/"
 # The small data set (smni97_eeg_data.tar.gz) contains data for the 2 subjects, 
 # alcoholic a_co2a0000364 and control c_co2c0000337
@@ -17,7 +19,7 @@ import gzip
 
 def untar_file(filename, root):
 	dir_name = filename.split(".")[0]
-	print(dir_name)
+	# print(dir_name)
 	if (filename.endswith("tar.gz")):
 		tar = tarfile.open(filename, "r:gz")
 		tar.extractall(root)
@@ -35,8 +37,32 @@ def download_file(input_filename, output_filename, extension):
 	file = urllib2.urlopen(UCI_DATASET + input_filename + "." + extension)
 	with open(output_filename + "." + extension, "wb") as write_file:
 		write_file.write(file.read())
-	print("... downloaded @ " + output_filename + "." + extension)
+	# print("... downloaded @ " + output_filename + "." + extension)
 	return output_filename + "." + extension
+
+def transpose_data(file_content):
+	file_content = file_content[4:]
+	transposed = [[0.0 for x in range(FREQUENCY_RATE)] for y in range(NUM_CHANNELS)] 
+	split_data = file_content.split("\n")
+	current_channel = 0
+	counter = 0
+	for line in split_data:
+		counter = counter + 1
+		if line.startswith("#") and "chan" in line:
+			splits = line.split(" ")
+			current_channel = int(splits[3])
+		else:
+			try: 
+				splits = line.split(" ")
+				sensor = splits[1]
+				time = int(splits[2])
+				voltage = float(splits[3])
+				transposed[current_channel][time] = voltage
+			except Exception:
+				continue
+	# print(transposed)
+	return transposed
+
 
 if __name__ == "__main__":
 	# main defines 
@@ -56,9 +82,9 @@ if __name__ == "__main__":
 
 		for root, dirs, files in os.walk(input_filename):
 			for subject_filename in files:
-				print(subject_filename)
+				# print(subject_filename)
 				untar_file(root + "/" + subject_filename, root)
-		print("\ncombining and un-gzipping patient EEG files...")
+		# print("\ncombining and un-gzipping patient EEG files...")
 		for root, dirs, files in os.walk(input_filename):
 			for eeg_dir in dirs:
 				for inner_root, inner_dirs, inner_files in os.walk(input_filename + "/" + eeg_dir):
@@ -66,16 +92,10 @@ if __name__ == "__main__":
 					for eeg_data_file in inner_files:
 						f = gzip.open(input_filename + "/" + eeg_dir + "/" + eeg_data_file, 'rb')
 						file_content = f.read()
+						transposed_content = transpose_data(file_content)
 						# print(type(file_content))
 						text_file = open(output_dir + "/" + eeg_data_file.split(".")[0] + ".txt", "w")
-						text_file.write(file_content)
+						text_file.write(transposed_content)
 						text_file.close()
 						f.close()
-						print(".. combined file @ " + output_dir + "/" + eeg_data_file.split(".")[0] + ".txt")
-
-
-
-
-
-
-
+						# print(".. combined file @ " + output_dir + "/" + eeg_data_file.split(".")[0] + ".txt")
