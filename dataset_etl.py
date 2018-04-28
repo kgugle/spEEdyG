@@ -30,7 +30,6 @@ def untar_directory(root, dir_files):
 	for file in dir_files:
 		untar_file(root + "/" + file, root)
 
-
 # downloads the the source fle to the destination (current dir)
 def download_file(input_filename, output_filename, extension):
 	file = urllib2.urlopen(UCI_DATASET + input_filename + "." + extension)

@@ -30,7 +30,7 @@ int reverse (int N, int n)
 
 void sort (double* f1, int N)
 {
-  double f2[SIZE};
+  double f2[SIZE];
   int i;
   for (i = 0; i < N; i++)
     f2[i] = f1[reverse(N, i)];
@@ -69,7 +69,7 @@ void FFT(double* f, int N, double d);
 {
   transform(f, N);
   int i;
-  for (int i = 0; i < N; i++)
+  for (int i = 0; i < N; i++) {
     f[i] *= d;
   }
 }
