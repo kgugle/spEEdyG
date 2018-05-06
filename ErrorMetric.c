@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #define ELECTRODES 105
-#define SIZE 15675
+#define SIZE 15765
 
 int compare_function(const void* a, const void* b) {
   double* x = (double*) a;
@@ -14,7 +15,23 @@ int compare_function(const void* a, const void* b) {
 }
 
 void sourceLocalization(double* FM_EEG_105, double* saa, double* xhat, double* y) {
-  return;
+  int i, j;
+
+  for (i = 0; i < ELECTRODES; i++) {
+    double value = 0.0;
+    for (j = 0; j < SIZE; j++) {
+      value += saa[j] * FM_EEG_105[i * SIZE + j];
+    }
+    y[i] = value;
+  }
+  
+  for (i = 0; i < SIZE; i++) {
+    double value = 0.0;
+    for (j = 0; j < ELECTRODES; j++) {
+      value += y[j] * FM_EEG_105[j * SIZE + i];
+    }
+    xhat[i] = value;
+  }
 }
 
 double max(double* xhat) {
