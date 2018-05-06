@@ -152,4 +152,6 @@ int main() {
   free(FN50);
   free(FN25);
   free(FN75);
+
+  return 0;
 }
