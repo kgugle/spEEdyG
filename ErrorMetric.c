@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "cycletimer.h"
 
-#define ELECTRODES 522
+#define ELECTRODES 105
 #define SIZE 15765
 
 
@@ -130,34 +130,30 @@ int firstZero(double* M) {
 	return i;
 }
 
-void multiply(int* finalR, double* dd, double* Multi) {
-	int i, j;
+void multiply(int* finalR, double* dd, double* Multi, int i) {
+	int j;
 
-	for (i = 0; i < 6; i++) {
-		for (j = 0; j < SIZE; j++) {
-			Multi[i * SIZE + j] = finalR[i * SIZE + j] * dd[i * SIZE + j];
-		}
+	for (j = 0; j < SIZE; j++) {
+		Multi[i * SIZE + j] = finalR[i * SIZE + j] * dd[i * SIZE + j];
 	}
 }
 
 int main() {
 	double **FM_EEG_105_2d = init_double_matrix(SIZE, ELECTRODES);
-	fill_double_matrix(SIZE, ELECTRODES, FM_EEG_105_2d, "FM_EEG_1378.txt");
-	printf("Reached 1\n");
+	fill_double_matrix(SIZE, ELECTRODES, FM_EEG_105_2d, "FM_EEG_105.txt");
 	double **GridLoc_2d = init_double_matrix(SIZE, 3);
 	fill_double_matrix(SIZE, 3, GridLoc_2d, "GridLoc.txt");
-	printf("Reached 2\n");
 
-	int Sources_2d[6][8] = {
-												{51, 1, 301, 351, 151, 102, 251, 201},
-												{52, 2, 302, 352, 152, 102, 252, 202},
-												{53, 3, 303, 353, 153, 103, 253, 203},
-												{54, 4, 304, 354, 154, 104, 254, 204},
-												{55, 5, 305, 355, 155, 105, 255, 205},
-												{56, 6, 306, 356, 156, 106, 256, 206},
-											};
+	int Sources_2d[6][8] = 
+		{
+		{51, 1, 301, 351, 151, 102, 251, 201},
+		{52, 2, 302, 352, 152, 102, 252, 202},
+		{53, 3, 303, 353, 153, 103, 253, 203},
+		{54, 4, 304, 354, 154, 104, 254, 204},
+		{55, 5, 305, 355, 155, 105, 255, 205},
+		{56, 6, 306, 356, 156, 106, 256, 206},
+		};
 
-	printf("Reached 3\n");
 	double* FM_EEG_105 = (double*)malloc(sizeof(double) * ELECTRODES * SIZE);
 	double* GridLoc = (double*)malloc(sizeof(double) * SIZE * 3);
 	int* Sources = (int*)malloc(sizeof(int) * 6 * 8);
@@ -198,7 +194,7 @@ int main() {
  
         double startTime = currentSeconds();
 
-	int i, l, k, m, n;
+	int i, l, k, n;
 
 	for (l = 0; l < 8; l++) {
 		for (i = 0; i < 6; i++) {
@@ -214,23 +210,19 @@ int main() {
 			}
 
 			memcpy(finalR + (i * SIZE), A, SIZE * sizeof(int));
-		}
 		
-		for (m = 0; m < 6; m++) {
-			int cc = c[m];
+			int cc = c[i];
 			for (n = 0; n < SIZE; n++) {
 				double xdist = GridLoc[cc * 3] - GridLoc[n * 3];
 				double ydist = GridLoc[cc * 3 + 1] - GridLoc[n * 3 + 1];
 				double zdist = GridLoc[cc * 3 + 2] - GridLoc[n * 3 + 2];
 				
 				double distancemat = sqrt(xdist * xdist + ydist * ydist + zdist * zdist);
-				dd[m * SIZE + n] = distancemat;
+				dd[i * SIZE + n] = distancemat;
 			}
-		}
 
-		multiply(finalR, dd, Multi);
+			multiply(finalR, dd, Multi, i);
 
-		for (i = 0; i < 6; i++) {
 			memcpy(M, Multi + (i * SIZE), SIZE * sizeof(double));
 			sort(M);
 			int idx = firstZero(M);
